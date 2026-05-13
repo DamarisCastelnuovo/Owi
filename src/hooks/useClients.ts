@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react'
 import type { Client } from '../types/client'
+import { INITIAL_CLIENTS } from '../data/initialClients'
 
 const STORAGE_KEY = 'owi_clients'
 
 function loadClients(): Client[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
+    if (raw) {
+      const parsed: Client[] = JSON.parse(raw)
+      if (parsed.length > 0) return parsed
+    }
+    return INITIAL_CLIENTS
   } catch {
-    return []
+    return INITIAL_CLIENTS
   }
 }
 
