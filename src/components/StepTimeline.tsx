@@ -86,7 +86,7 @@ export function StepTimeline({ client, onToggleStep, onSetCurrent, onUpdateComme
               {step.emoji && <span className="mr-1">{step.emoji}</span>}
               {step.label}
             </span>
-            <span className="text-xs text-gray-400">Día {step.day}</span>
+            <span className="text-xs text-gray-400">Día háb. {step.day}</span>
             {status === 'overdue' && !isDone && (
               <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">Atrasado</span>
             )}

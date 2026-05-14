@@ -59,7 +59,7 @@ export function ClientDetail({ client, onBack, onToggleStep, onSetCurrent, onUpd
               </span>
             ) : (
               <span className="inline-block bg-purple-100 text-purple-700 text-sm font-semibold px-3 py-1 rounded-full">
-                Día {days} de 30
+                Día hábil {days} de 30
               </span>
             )}
           </div>
@@ -68,7 +68,7 @@ export function ClientDetail({ client, onBack, onToggleStep, onSetCurrent, onUpd
         <div className="grid grid-cols-3 gap-4 mt-5">
           <div className="text-center p-3 bg-gray-50 rounded-xl">
             <p className="text-2xl font-bold text-gray-800">{days}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Días activo</p>
+            <p className="text-xs text-gray-500 mt-0.5">Días hábiles</p>
           </div>
           <div className="text-center p-3 bg-gray-50 rounded-xl">
             <p className="text-2xl font-bold text-gray-800">{completed}/{total}</p>
@@ -78,7 +78,7 @@ export function ClientDetail({ client, onBack, onToggleStep, onSetCurrent, onUpd
             <p className={`text-2xl font-bold ${isOverdue ? 'text-red-500' : 'text-gray-800'}`}>
               {isDone ? '—' : daysLeft}
             </p>
-            <p className="text-xs text-gray-500 mt-0.5">Días restantes</p>
+            <p className="text-xs text-gray-500 mt-0.5">Días háb. restantes</p>
           </div>
         </div>
 
