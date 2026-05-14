@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Check, Clock, MessageCircle } from 'lucide-react'
 import { ONBOARDING_STEPS } from '../data/steps'
 import type { Client } from '../types/client'
-import { daysSince, businessDaysBetween, formatDate } from '../utils/dates'
+import { daysSince, businessDaysBetween, addBusinessDays, formatDate } from '../utils/dates'
 
 interface Props {
   client: Client
@@ -54,26 +54,42 @@ export function StepTimeline({ client, onToggleStep, onSetCurrent, onUpdateComme
     return 'text-gray-500'
   }
 
-  function stepDateInfo(stepId: string, status: string): string | null {
-    const startIso = client.stepStartDates?.[stepId]
-    const endIso = client.stepCompletedDates?.[stepId]
-    if (status === 'done' && endIso) {
-      const dur = startIso ? businessDaysBetween(startIso, endIso) : null
-      return `Completado ${formatDate(endIso)}${dur !== null && dur > 0 ? ` · ${dur}d háb.` : ''}`
-    }
-    if (status === 'current' && startIso) {
-      const dur = businessDaysBetween(startIso, new Date().toISOString())
-      return `En curso desde ${formatDate(startIso)}${dur > 0 ? ` · ${dur}d háb.` : ''}`
-    }
-    return null
-  }
-
   function renderStep(step: typeof ONBOARDING_STEPS[0], isLast: boolean) {
     const status = getStepStatus(step.id, step.day)
     const isDone = status === 'done'
     const hasComment = !!(client.stepComments?.[step.id])
     const isCommentOpen = openCommentStepId === step.id
-    const dateInfo = stepDateInfo(step.id, status)
+
+    const expectedDate = addBusinessDays(client.startDate, step.day)
+    const expectedStr = formatDate(expectedDate.toISOString())
+
+    const completedIso = client.stepCompletedDates?.[step.id]
+    const startIso = client.stepStartDates?.[step.id]
+
+    // For completed steps: was it on time?
+    let completionLine: { text: string; ok: boolean } | null = null
+    if (isDone && completedIso) {
+      const completedDate = new Date(completedIso)
+      completedDate.setHours(0, 0, 0, 0)
+      expectedDate.setHours(0, 0, 0, 0)
+      const late = businessDaysBetween(expectedDate.toISOString(), completedIso)
+      const early = businessDaysBetween(completedIso, expectedDate.toISOString())
+      if (completedDate <= expectedDate) {
+        completionLine = { text: `Completado ${formatDate(completedIso)}${early > 0 ? ` · ${early}d antes` : ' · en fecha'}`, ok: true }
+      } else {
+        completionLine = { text: `Completado ${formatDate(completedIso)} · ${late}d háb. tarde`, ok: false }
+      }
+    }
+
+    // Duration in step
+    let durationLine: string | null = null
+    if (isDone && completedIso && startIso) {
+      const dur = businessDaysBetween(startIso, completedIso)
+      if (dur > 0) durationLine = `${dur}d háb. en esta etapa`
+    } else if (status === 'current' && startIso) {
+      const dur = businessDaysBetween(startIso, new Date().toISOString())
+      if (dur > 0) durationLine = `${dur}d háb. en esta etapa`
+    }
 
     return (
       <div key={step.id} className="flex gap-3 group">
@@ -103,7 +119,7 @@ export function StepTimeline({ client, onToggleStep, onSetCurrent, onUpdateComme
             </span>
             <span className="text-xs text-gray-400">Día háb. {step.day}</span>
             {status === 'overdue' && !isDone && (
-              <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">Atrasado</span>
+              <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">Demorado</span>
             )}
             {status === 'current' && (
               <span className="text-xs bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded-full">En curso</span>
@@ -119,8 +135,27 @@ export function StepTimeline({ client, onToggleStep, onSetCurrent, onUpdateComme
             </button>
           </div>
 
-          {dateInfo && (
-            <p className="text-xs text-gray-400 mt-0.5 leading-snug">{dateInfo}</p>
+          {/* Expected date line */}
+          <p className="text-xs text-gray-400 mt-0.5">
+            Fecha esperada: <span className="font-medium text-gray-500">{expectedStr}</span>
+            {status === 'pending' && <span className="ml-1 text-gray-400">(pendiente)</span>}
+          </p>
+
+          {/* Completion result */}
+          {completionLine && (
+            <p className={`text-xs mt-0.5 font-medium ${completionLine.ok ? 'text-green-600' : 'text-orange-500'}`}>
+              {completionLine.ok ? '✓' : '⚠'} {completionLine.text}
+            </p>
+          )}
+          {!completionLine && status === 'current' && (
+            <p className="text-xs mt-0.5 text-purple-500">
+              {days <= step.day ? `✓ En término (quedan ${step.day - days}d háb.)` : `⚠ ${days - step.day}d háb. demorado en este paso`}
+            </p>
+          )}
+
+          {/* Duration in step */}
+          {durationLine && (
+            <p className="text-xs text-gray-400 mt-0.5">{durationLine}</p>
           )}
 
           {hasComment && !isCommentOpen && (
