@@ -52,7 +52,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-screen-xl mx-auto w-full px-4 sm:px-6 lg:px-10 py-4 flex items-center justify-between">
+        <div className="w-full px-6 sm:px-10 lg:px-16 py-4 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <div>
               <h1 className="text-lg font-bold text-gray-900">Owi</h1>
@@ -83,7 +83,7 @@ export default function App() {
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
           >
             <Plus size={16} />
             <span className="hidden sm:inline">Nuevo cliente</span>
@@ -91,7 +91,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-screen-xl mx-auto w-full px-4 sm:px-6 lg:px-10 py-6">
+      <main className="w-full px-6 sm:px-10 lg:px-16 py-6">
         {selectedClient ? (
           <ClientDetail
             client={selectedClient}
@@ -114,7 +114,7 @@ export default function App() {
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Buscar por nombre o empresa..."
-                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
               <div className="flex gap-1.5 flex-wrap">
@@ -124,7 +124,7 @@ export default function App() {
                     onClick={() => setFilter(f)}
                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       filter === f
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-purple-600 text-white'
                         : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
                     }`}
                   >
@@ -139,7 +139,7 @@ export default function App() {
               <select
                 value={stepFilter}
                 onChange={e => setStepFilter(e.target.value)}
-                className="w-full appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="">Todas las etapas</option>
                 {BASE_STEPS.map(s => (
@@ -158,7 +158,7 @@ export default function App() {
                 {clients.length === 0 && (
                   <button
                     onClick={() => setShowAddModal(true)}
-                    className="mt-3 text-blue-600 text-sm font-medium hover:underline"
+                    className="mt-3 text-purple-600 text-sm font-medium hover:underline"
                   >
                     Agregar cliente
                   </button>
