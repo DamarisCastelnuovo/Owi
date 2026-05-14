@@ -12,8 +12,7 @@ const BASE_STEPS = ONBOARDING_STEPS.filter(s => !s.optional)
 function isOverdue(c: Client) {
   const days = daysSince(c.startDate)
   const done = c.completedSteps.filter(id => BASE_STEPS.some(s => s.id === id)).length === BASE_STEPS.length
-  const step = ONBOARDING_STEPS.find(s => s.id === c.currentStepId)
-  return !done && !!step && !step.optional && days > step.day
+  return !done && days > 30
 }
 
 function isDone(c: Client) {
@@ -232,7 +231,7 @@ export function StatsPanel({ clients }: Props) {
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                       overdue ? 'bg-red-100 text-red-600' : 'bg-purple-100 text-purple-700'
                     }`}>
-                      Día {days}
+                      {overdue ? `Atrasado ${days - 30}d` : `Día háb. ${days}`}
                     </span>
                   </div>
                 </div>

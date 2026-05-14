@@ -1,5 +1,8 @@
 import type { Client } from '../types/client'
 
+type InitialClient = Omit<Client, 'stepStartDates' | 'stepCompletedDates'>
+const toClient = (c: InitialClient): Client => ({ ...c, stepStartDates: {}, stepCompletedDates: {} })
+
 const ALL_STEPS = [
   'firma_contrato', 'pago_cliente', 'user_admin_app', 'alta_portal', 'primer_contacto_sac',
   'bot_generico', 'relevamiento_sac', 'creacion_prompt', 'entrega_prompt',
@@ -12,7 +15,7 @@ function stepsUpTo(stepId: string): string[] {
   return idx <= 0 ? [] : ALL_STEPS.slice(0, idx)
 }
 
-export const INITIAL_CLIENTS: Client[] = [
+const RAW_CLIENTS: InitialClient[] = [
   {
     id: 'kan-1',
     name: 'Valls SA',
@@ -156,3 +159,5 @@ export const INITIAL_CLIENTS: Client[] = [
     createdAt: '2026-05-13T12:30:00.000Z',
   },
 ]
+
+export const INITIAL_CLIENTS: Client[] = RAW_CLIENTS.map(toClient)

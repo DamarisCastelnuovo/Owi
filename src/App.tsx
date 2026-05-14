@@ -38,8 +38,7 @@ export default function App() {
     const days = daysSince(c.startDate)
     const completed = c.completedSteps.filter(id => BASE_STEPS.some(s => s.id === id)).length
     const isDone = completed === BASE_STEPS.length
-    const currentStepData = ONBOARDING_STEPS.find(s => s.id === c.currentStepId)
-    const isOverdue = !isDone && !!currentStepData && !currentStepData.optional && days > currentStepData.day
+    const isOverdue = !isDone && days > 30
 
     if (filter === 'done' && !isDone) return false
     if (filter === 'overdue' && !isOverdue) return false

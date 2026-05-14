@@ -19,8 +19,7 @@ export function ClientDetail({ client, onBack, onToggleStep, onSetCurrent, onUpd
   const total = baseSteps.length
   const progress = Math.round((completed / total) * 100)
   const isDone = completed === total
-  const currentStep = ONBOARDING_STEPS.find(s => s.id === client.currentStepId)
-  const isOverdue = !isDone && !!currentStep && !currentStep.optional && days > currentStep.day
+  const isOverdue = !isDone && days > 30
   const daysLeft = Math.max(0, 30 - days)
 
   return (
@@ -55,7 +54,7 @@ export function ClientDetail({ client, onBack, onToggleStep, onSetCurrent, onUpd
               </span>
             ) : isOverdue ? (
               <span className="inline-block bg-red-100 text-red-600 text-sm font-semibold px-3 py-1 rounded-full">
-                Atrasado {days - (currentStep?.day ?? 30)}d
+                Atrasado {days - 30}d háb.
               </span>
             ) : (
               <span className="inline-block bg-purple-100 text-purple-700 text-sm font-semibold px-3 py-1 rounded-full">

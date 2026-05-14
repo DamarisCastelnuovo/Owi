@@ -25,7 +25,15 @@ function migrateClient(c: Client): Client {
   )
   const currentStepId = c.currentStepId === 'user_admin' ? 'user_admin_app' : c.currentStepId
   const startDate = START_DATE_PATCHES[c.id] ?? c.startDate
-  return { ...c, stepComments: c.stepComments ?? {}, completedSteps, currentStepId, startDate }
+  return {
+    ...c,
+    stepComments: c.stepComments ?? {},
+    stepStartDates: c.stepStartDates ?? {},
+    stepCompletedDates: c.stepCompletedDates ?? {},
+    completedSteps,
+    currentStepId,
+    startDate,
+  }
 }
 
 function loadClients(): Client[] {
@@ -52,13 +60,15 @@ export function useClients() {
     saveClients(clients)
   }, [clients])
 
-  function addClient(data: Omit<Client, 'id' | 'createdAt' | 'completedSteps' | 'currentStepId' | 'stepComments'>) {
+  function addClient(data: Omit<Client, 'id' | 'createdAt' | 'completedSteps' | 'currentStepId' | 'stepComments' | 'stepStartDates' | 'stepCompletedDates'>) {
     const client: Client = {
       ...data,
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
       completedSteps: [],
       stepComments: {},
+      stepStartDates: { firma_contrato: new Date().toISOString() },
+      stepCompletedDates: {},
       currentStepId: 'firma_contrato',
     }
     setClients(prev => [...prev, client])
@@ -66,18 +76,25 @@ export function useClients() {
   }
 
   function updateClientStep(clientId: string, stepId: string, completed: boolean) {
+    const now = new Date().toISOString()
     setClients(prev => prev.map(c => {
       if (c.id !== clientId) return c
       const completedSteps = completed
         ? Array.from(new Set([...c.completedSteps, stepId]))
         : c.completedSteps.filter(s => s !== stepId)
-      return { ...c, completedSteps, currentStepId: stepId }
+      const stepCompletedDates = completed
+        ? { ...c.stepCompletedDates, [stepId]: now }
+        : Object.fromEntries(Object.entries(c.stepCompletedDates).filter(([k]) => k !== stepId))
+      return { ...c, completedSteps, stepCompletedDates, currentStepId: stepId }
     }))
   }
 
   function setCurrentStep(clientId: string, stepId: string) {
+    const now = new Date().toISOString()
     setClients(prev => prev.map(c =>
-      c.id === clientId ? { ...c, currentStepId: stepId } : c
+      c.id === clientId
+        ? { ...c, currentStepId: stepId, stepStartDates: { ...c.stepStartDates, [stepId]: now } }
+        : c
     ))
   }
 
