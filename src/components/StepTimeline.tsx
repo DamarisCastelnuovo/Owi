@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Check, Clock, MessageCircle } from 'lucide-react'
 import { ONBOARDING_STEPS } from '../data/steps'
 import type { Client } from '../types/client'
-import { daysSince } from '../utils/dates'
+import { daysSince, businessDaysBetween, formatDate } from '../utils/dates'
 
 interface Props {
   client: Client
@@ -54,11 +54,26 @@ export function StepTimeline({ client, onToggleStep, onSetCurrent, onUpdateComme
     return 'text-gray-500'
   }
 
+  function stepDateInfo(stepId: string, status: string): string | null {
+    const startIso = client.stepStartDates?.[stepId]
+    const endIso = client.stepCompletedDates?.[stepId]
+    if (status === 'done' && endIso) {
+      const dur = startIso ? businessDaysBetween(startIso, endIso) : null
+      return `Completado ${formatDate(endIso)}${dur !== null && dur > 0 ? ` · ${dur}d háb.` : ''}`
+    }
+    if (status === 'current' && startIso) {
+      const dur = businessDaysBetween(startIso, new Date().toISOString())
+      return `En curso desde ${formatDate(startIso)}${dur > 0 ? ` · ${dur}d háb.` : ''}`
+    }
+    return null
+  }
+
   function renderStep(step: typeof ONBOARDING_STEPS[0], isLast: boolean) {
     const status = getStepStatus(step.id, step.day)
     const isDone = status === 'done'
     const hasComment = !!(client.stepComments?.[step.id])
     const isCommentOpen = openCommentStepId === step.id
+    const dateInfo = stepDateInfo(step.id, status)
 
     return (
       <div key={step.id} className="flex gap-3 group">
@@ -103,6 +118,10 @@ export function StepTimeline({ client, onToggleStep, onSetCurrent, onUpdateComme
               <MessageCircle size={13} fill={hasComment ? 'currentColor' : 'none'} />
             </button>
           </div>
+
+          {dateInfo && (
+            <p className="text-xs text-gray-400 mt-0.5 leading-snug">{dateInfo}</p>
+          )}
 
           {hasComment && !isCommentOpen && (
             <p className="text-xs text-gray-500 mt-1 italic leading-snug">

@@ -17,7 +17,7 @@ export function ClientCard({ client, onClick, onDelete }: Props) {
   const progress = Math.round((completed / total) * 100)
   const currentStep = ONBOARDING_STEPS.find(s => s.id === client.currentStepId)
   const isDone = completed === total
-  const isOverdue = !isDone && !!currentStep && !currentStep.optional && days > currentStep.day
+  const isOverdue = !isDone && days > 30
 
   const statusColor = isDone
     ? 'bg-green-50 border-green-200'
@@ -33,7 +33,7 @@ export function ClientCard({ client, onClick, onDelete }: Props) {
     ? 'bg-yellow-100 text-yellow-700'
     : 'bg-purple-100 text-purple-700'
 
-  const badgeText = isDone ? 'Completado' : isOverdue ? 'Atrasado' : `Día ${days}`
+  const badgeText = isDone ? 'Completado' : isOverdue ? `Atrasado ${days - 30}d` : `Día háb. ${days}`
 
   return (
     <div

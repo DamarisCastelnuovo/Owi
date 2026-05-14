@@ -94,7 +94,23 @@ export function businessDaysSince(isoDate: string): number {
   return count
 }
 
-// Keep for backward compatibility — calendar days (used only for display if needed)
+export function businessDaysBetween(isoStart: string, isoEnd: string): number {
+  const cache = new Map<number, Set<string>>()
+  const start = new Date(isoStart)
+  start.setHours(0, 0, 0, 0)
+  const end = new Date(isoEnd)
+  end.setHours(0, 0, 0, 0)
+  if (start >= end) return 0
+  let count = 0
+  const cur = new Date(start)
+  cur.setDate(cur.getDate() + 1)
+  while (cur <= end) {
+    if (isWorkday(cur, cache)) count++
+    cur.setDate(cur.getDate() + 1)
+  }
+  return count
+}
+
 export function daysSince(isoDate: string): number {
   return businessDaysSince(isoDate)
 }
