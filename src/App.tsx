@@ -55,7 +55,9 @@ export default function App() {
         <div className="w-full px-6 sm:px-10 lg:px-16 py-4 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <div>
-              <h1 className="text-lg font-bold text-gray-900">Owi</h1>
+              <h1 className="text-xl font-bold tracking-tight">
+                <span style={{ color: '#F72585' }}>owi</span><span style={{ color: '#18BFFF' }}>smart</span>
+              </h1>
               <p className="text-xs text-gray-400">Dashboard de altas</p>
             </div>
             {!selectedClient && (
