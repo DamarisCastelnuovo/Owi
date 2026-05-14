@@ -16,7 +16,8 @@ export function GlobalStats({ clients }: Props) {
       const days = daysSince(c.startDate)
       const completed = c.completedSteps.filter(id => baseSteps.some(s => s.id === id)).length
       const isDone = completed === total
-      const isOverdue = days > 30 && !isDone
+      const currentStepData = ONBOARDING_STEPS.find(s => s.id === c.currentStepId)
+      const isOverdue = !isDone && !!currentStepData && !currentStepData.optional && days > currentStepData.day
 
       return {
         total: acc.total + 1,

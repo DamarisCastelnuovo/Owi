@@ -9,7 +9,8 @@ export interface Step {
 export const ONBOARDING_STEPS: Step[] = [
   { id: 'firma_contrato',        label: 'Firma Contrato',               day: 1  },
   { id: 'pago_cliente',          label: 'Pago del Cliente',             day: 1  },
-  { id: 'user_admin',            label: 'User Admin en App y Alta Portal', day: 1 },
+  { id: 'user_admin_app',         label: 'User Admin en App',            day: 1  },
+  { id: 'alta_portal',           label: 'Alta Portal',                  day: 1  },
   { id: 'primer_contacto_sac',   label: 'Primer Contacto SAC',          day: 2  },
   { id: 'bot_generico',          label: 'Puesta en Marcha Bot Genérico', day: 3 },
   { id: 'relevamiento_sac',      label: 'Relevamiento Funcional SAC',   day: 4  },
