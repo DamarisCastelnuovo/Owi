@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { ONBOARDING_STEPS } from '../data/steps'
 import type { Client } from '../types/client'
 import { daysSince } from '../utils/dates'
@@ -19,50 +20,104 @@ function isDone(c: Client) {
   return c.completedSteps.filter(id => BASE_STEPS.some(s => s.id === id)).length === BASE_STEPS.length
 }
 
+function polarToCart(cx: number, cy: number, r: number, angleDeg: number) {
+  const rad = ((angleDeg - 90) * Math.PI) / 180
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) }
+}
+
+function arcPath(cx: number, cy: number, outerR: number, innerR: number, start: number, end: number) {
+  // Handle near-full circle to avoid degenerate path
+  const clampedEnd = end >= 360 ? 359.999 : end
+  const oStart = polarToCart(cx, cy, outerR, start)
+  const oEnd   = polarToCart(cx, cy, outerR, clampedEnd)
+  const iStart = polarToCart(cx, cy, innerR, start)
+  const iEnd   = polarToCart(cx, cy, innerR, clampedEnd)
+  const large  = clampedEnd - start > 180 ? 1 : 0
+  return [
+    `M ${oStart.x} ${oStart.y}`,
+    `A ${outerR} ${outerR} 0 ${large} 1 ${oEnd.x} ${oEnd.y}`,
+    `L ${iEnd.x} ${iEnd.y}`,
+    `A ${innerR} ${innerR} 0 ${large} 0 ${iStart.x} ${iStart.y}`,
+    'Z',
+  ].join(' ')
+}
+
 function DonutChart({ data }: { data: { label: string; value: number; color: string }[] }) {
+  const [hovered, setHovered] = useState<number | null>(null)
   const total = data.reduce((s, d) => s + d.value, 0)
+
   if (total === 0) return <p className="text-gray-400 text-sm text-center py-8">Sin datos</p>
 
-  const r = 36
-  const C = 2 * Math.PI * r
-  let running = 0
+  const cx = 110, cy = 110, outerR = 90, innerR = 58
+  let currentAngle = 0
+
+  const segments = data
+    .filter(d => d.value > 0)
+    .map((d, i) => {
+      const angle = (d.value / total) * 360
+      const seg = { ...d, startAngle: currentAngle, endAngle: currentAngle + angle, index: i }
+      currentAngle += angle
+      return seg
+    })
+
+  const hov = hovered !== null ? segments[hovered] ?? null : null
 
   return (
-    <div className="flex items-center gap-8">
-      <div className="relative flex-shrink-0 w-36 h-36">
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          <circle cx={50} cy={50} r={r} fill="none" stroke="#f3f4f6" strokeWidth={14} />
-          {data.filter(d => d.value > 0).map(d => {
-            const arc = (d.value / total) * C
-            const offset = running
-            running += arc
-            return (
-              <circle
-                key={d.label}
-                cx={50} cy={50} r={r}
-                fill="none"
-                stroke={d.color}
-                strokeWidth={14}
-                strokeLinecap="butt"
-                strokeDasharray={`${arc} ${C}`}
-                strokeDashoffset={-offset}
-                transform="rotate(-90 50 50)"
-              />
-            )
-          })}
+    <div className="flex flex-col sm:flex-row items-center gap-8">
+      <div className="relative flex-shrink-0 w-64 h-64">
+        <svg viewBox="0 0 220 220" className="w-full h-full">
+          {/* bg ring when empty */}
+          <circle cx={cx} cy={cy} r={(outerR + innerR) / 2} fill="none" stroke="#f3f4f6" strokeWidth={outerR - innerR} />
+          {segments.map((seg, i) => (
+            <path
+              key={seg.label}
+              d={arcPath(cx, cy, outerR, innerR, seg.startAngle, seg.endAngle)}
+              fill={seg.color}
+              opacity={hovered === null || hovered === i ? 1 : 0.35}
+              className="cursor-pointer transition-opacity duration-150"
+              style={{ filter: hovered === i ? 'brightness(1.12)' : undefined }}
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
+            />
+          ))}
         </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-2xl font-bold text-gray-800">{total}</span>
-          <span className="text-xs text-gray-400">clientes</span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
+          {hov ? (
+            <>
+              <span className="text-3xl font-bold text-gray-800">{hov.value}</span>
+              <span
+                className="text-xs font-medium mt-0.5 px-3 text-center leading-tight"
+                style={{ color: hov.color }}
+              >
+                {hov.label}
+              </span>
+              <span className="text-xs text-gray-400 mt-0.5">
+                {Math.round((hov.value / total) * 100)}%
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="text-3xl font-bold text-gray-800">{total}</span>
+              <span className="text-xs text-gray-400 mt-0.5">clientes</span>
+            </>
+          )}
         </div>
       </div>
-      <div className="flex flex-col gap-2.5">
-        {data.map(d => (
-          <div key={d.label} className="flex items-center gap-2.5">
-            <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
-            <span className="text-sm text-gray-600">
-              {d.label}: <strong className="text-gray-800">{d.value}</strong>
-            </span>
+
+      <div className="flex flex-col gap-3">
+        {segments.map((seg, i) => (
+          <div
+            key={seg.label}
+            className={`flex items-center gap-3 px-3 py-2 rounded-xl cursor-default transition-colors ${
+              hovered === i ? 'bg-gray-100' : 'hover:bg-gray-50'
+            }`}
+            onMouseEnter={() => setHovered(i)}
+            onMouseLeave={() => setHovered(null)}
+          >
+            <span className="w-3.5 h-3.5 rounded-full flex-shrink-0" style={{ backgroundColor: seg.color }} />
+            <span className="text-sm text-gray-700 min-w-[90px]">{seg.label}</span>
+            <span className="text-sm font-bold text-gray-800">{seg.value}</span>
+            <span className="text-xs text-gray-400">({Math.round((seg.value / total) * 100)}%)</span>
           </div>
         ))}
       </div>
@@ -82,7 +137,7 @@ function HorizontalBars({ data }: { data: { label: string; value: number; color:
           <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-700"
-              style={{ width: d.value > 0 ? `${(d.value / max) * 100}%` : '2%', backgroundColor: d.color, minWidth: d.value > 0 ? undefined : 0 }}
+              style={{ width: d.value > 0 ? `${(d.value / max) * 100}%` : '0%', backgroundColor: d.color }}
             />
           </div>
           <span className="text-xs font-semibold text-gray-700 w-5 text-right flex-shrink-0">{d.value}</span>
@@ -121,7 +176,6 @@ export function StatsPanel({ clients }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Summary strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: 'Total clientes', value: total, color: 'text-gray-800', bg: 'bg-gray-50' },
@@ -136,7 +190,6 @@ export function StatsPanel({ clients }: Props) {
         ))}
       </div>
 
-      {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-2xl border border-gray-200 p-6">
           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-5">
@@ -153,11 +206,10 @@ export function StatsPanel({ clients }: Props) {
         </div>
       </div>
 
-      {/* Active clients table */}
       {recentlyActive.length > 0 && (
         <div className="bg-white rounded-2xl border border-gray-200 p-6">
           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
-            Clientes más recientes sin completar
+            Clientes activos más recientes
           </h3>
           <div className="divide-y divide-gray-100">
             {recentlyActive.map(c => {
