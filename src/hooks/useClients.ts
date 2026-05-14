@@ -12,7 +12,8 @@ const START_DATE_PATCHES: Record<string, string> = {
   'kan-8':  '2025-12-26',  // Trucker (Tracker Group SRL)
   'kan-9':  '2025-12-16',  // Northbus
   'kan-10': '2026-01-13',  // La Canteria
-  'kan-2':  '2026-03-11',  // La Pesceria
+  'kan-2':  '2026-04-07',  // La Pesceria
+  'kan-12': '2026-03-11',  // FP Comunicaciones
   'kan-4':  '2026-04-22',  // Strada
   'kan-13': '2026-05-04',  // Deper
 }
