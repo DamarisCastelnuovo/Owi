@@ -31,7 +31,7 @@ export function ClientCard({ client, onClick, onDelete }: Props) {
     ? 'bg-red-100 text-red-600'
     : days > 20
     ? 'bg-yellow-100 text-yellow-700'
-    : 'bg-blue-100 text-blue-700'
+    : 'bg-purple-100 text-purple-700'
 
   const badgeText = isDone ? 'Completado' : isOverdue ? 'Atrasado' : `Día ${days}`
 
@@ -72,7 +72,7 @@ export function ClientCard({ client, onClick, onDelete }: Props) {
         </div>
         <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all ${isDone ? 'bg-green-500' : isOverdue ? 'bg-red-400' : 'bg-blue-500'}`}
+            className={`h-full rounded-full transition-all ${isDone ? 'bg-green-500' : isOverdue ? 'bg-red-400' : 'bg-purple-500'}`}
             style={{ width: `${progress}%` }}
           />
         </div>

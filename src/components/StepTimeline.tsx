@@ -42,14 +42,14 @@ export function StepTimeline({ client, onToggleStep, onSetCurrent, onUpdateComme
 
   const stepColor = (status: string) => {
     if (status === 'done')    return 'bg-green-500 border-green-500 text-white'
-    if (status === 'current') return 'bg-blue-500 border-blue-500 text-white'
+    if (status === 'current') return 'bg-purple-500 border-purple-500 text-white'
     if (status === 'overdue') return 'bg-red-400 border-red-400 text-white'
     return 'bg-white border-gray-300 text-gray-400'
   }
 
   const labelColor = (status: string) => {
     if (status === 'done')    return 'text-green-700'
-    if (status === 'current') return 'text-blue-700 font-semibold'
+    if (status === 'current') return 'text-purple-700 font-semibold'
     if (status === 'overdue') return 'text-red-600'
     return 'text-gray-500'
   }
@@ -91,13 +91,13 @@ export function StepTimeline({ client, onToggleStep, onSetCurrent, onUpdateComme
               <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">Atrasado</span>
             )}
             {status === 'current' && (
-              <span className="text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full">En curso</span>
+              <span className="text-xs bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded-full">En curso</span>
             )}
             <button
               onClick={() => toggleComment(step.id)}
               className={`p-0.5 rounded transition-colors ${
-                hasComment ? 'text-blue-500 hover:text-blue-700' : 'text-gray-300 hover:text-gray-500'
-              } ${isCommentOpen ? 'text-blue-600' : ''}`}
+                hasComment ? 'text-purple-500 hover:text-purple-700' : 'text-gray-300 hover:text-gray-500'
+              } ${isCommentOpen ? 'text-purple-600' : ''}`}
               title={hasComment ? 'Ver/editar comentario' : 'Agregar comentario'}
             >
               <MessageCircle size={13} fill={hasComment ? 'currentColor' : 'none'} />
@@ -117,7 +117,7 @@ export function StepTimeline({ client, onToggleStep, onSetCurrent, onUpdateComme
                 onChange={e => setDraftComment(e.target.value)}
                 placeholder="Agregar comentario..."
                 rows={2}
-                className="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 autoFocus
                 onKeyDown={e => {
                   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) saveComment(step.id)
@@ -127,7 +127,7 @@ export function StepTimeline({ client, onToggleStep, onSetCurrent, onUpdateComme
               <div className="flex gap-2">
                 <button
                   onClick={() => saveComment(step.id)}
-                  className="text-xs bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="text-xs bg-purple-600 text-white px-3 py-1 rounded-lg hover:bg-purple-700 transition-colors"
                 >
                   Guardar
                 </button>

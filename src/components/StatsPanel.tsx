@@ -154,7 +154,7 @@ export function StatsPanel({ clients }: Props) {
   const activeCount = total - completedCount - overdueCount
 
   const statusData = [
-    { label: 'En proceso', value: activeCount, color: '#3b82f6' },
+    { label: 'En proceso', value: activeCount, color: '#9333ea' },
     { label: 'Completados', value: completedCount, color: '#22c55e' },
     { label: 'Atrasados', value: overdueCount, color: '#ef4444' },
   ]
@@ -162,7 +162,7 @@ export function StatsPanel({ clients }: Props) {
   const stepData = BASE_STEPS.map(step => ({
     label: step.label,
     value: clients.filter(c => c.currentStepId === step.id).length,
-    color: '#6366f1',
+    color: '#9333ea',
   }))
 
   const recentlyActive = clients
@@ -179,9 +179,9 @@ export function StatsPanel({ clients }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: 'Total clientes', value: total, color: 'text-gray-800', bg: 'bg-gray-50' },
-          { label: 'En proceso', value: activeCount, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'En proceso', value: activeCount, color: 'text-purple-600', bg: 'bg-purple-50' },
           { label: 'Completados', value: completedCount, color: 'text-green-600', bg: 'bg-green-50' },
-          { label: 'Promedio días activo', value: avgDays, color: 'text-purple-600', bg: 'bg-purple-50' },
+          { label: 'Promedio días activo', value: avgDays, color: 'text-teal-600', bg: 'bg-teal-50' },
         ].map(card => (
           <div key={card.label} className={`${card.bg} rounded-2xl p-5`}>
             <p className={`text-3xl font-bold ${card.color}`}>{card.value}</p>
@@ -230,7 +230,7 @@ export function StatsPanel({ clients }: Props) {
                       </span>
                     )}
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      overdue ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-700'
+                      overdue ? 'bg-red-100 text-red-600' : 'bg-purple-100 text-purple-700'
                     }`}>
                       Día {days}
                     </span>

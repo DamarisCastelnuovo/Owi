@@ -58,7 +58,7 @@ export function ClientDetail({ client, onBack, onToggleStep, onSetCurrent, onUpd
                 Atrasado {days - (currentStep?.day ?? 30)}d
               </span>
             ) : (
-              <span className="inline-block bg-blue-100 text-blue-700 text-sm font-semibold px-3 py-1 rounded-full">
+              <span className="inline-block bg-purple-100 text-purple-700 text-sm font-semibold px-3 py-1 rounded-full">
                 Día {days} de 30
               </span>
             )}
@@ -89,7 +89,7 @@ export function ClientDetail({ client, onBack, onToggleStep, onSetCurrent, onUpd
           </div>
           <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all duration-500 ${isDone ? 'bg-green-500' : isOverdue ? 'bg-red-400' : 'bg-blue-500'}`}
+              className={`h-full rounded-full transition-all duration-500 ${isDone ? 'bg-green-500' : isOverdue ? 'bg-red-400' : 'bg-purple-500'}`}
               style={{ width: `${progress}%` }}
             />
           </div>

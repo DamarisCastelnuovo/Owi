@@ -36,7 +36,7 @@ export function AddClientModal({ onAdd, onClose }: Props) {
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Nombre del contacto"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               autoFocus
               required
             />
@@ -48,7 +48,7 @@ export function AddClientModal({ onAdd, onClose }: Props) {
               value={company}
               onChange={e => setCompany(e.target.value)}
               placeholder="Nombre de la empresa"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               required
             />
           </div>
@@ -58,7 +58,7 @@ export function AddClientModal({ onAdd, onClose }: Props) {
               type="date"
               value={startDate}
               onChange={e => setStartDate(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               required
             />
           </div>
@@ -72,7 +72,7 @@ export function AddClientModal({ onAdd, onClose }: Props) {
             </button>
             <button
               type="submit"
-              className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 transition-colors"
+              className="flex-1 bg-purple-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-purple-700 transition-colors"
             >
               Agregar
             </button>
