@@ -111,6 +111,18 @@ export function businessDaysBetween(isoStart: string, isoEnd: string): number {
   return count
 }
 
+export function addBusinessDays(isoDate: string, n: number): Date {
+  const cache = new Map<number, Set<string>>()
+  const cur = new Date(isoDate)
+  cur.setHours(0, 0, 0, 0)
+  let remaining = n
+  while (remaining > 0) {
+    cur.setDate(cur.getDate() + 1)
+    if (isWorkday(cur, cache)) remaining--
+  }
+  return cur
+}
+
 export function daysSince(isoDate: string): number {
   return businessDaysSince(isoDate)
 }
