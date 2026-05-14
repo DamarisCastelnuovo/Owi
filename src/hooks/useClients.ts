@@ -4,13 +4,27 @@ import { INITIAL_CLIENTS } from '../data/initialClients'
 
 const STORAGE_KEY = 'owi_clients'
 
+// Corrected start dates for seeded clients
+const START_DATE_PATCHES: Record<string, string> = {
+  'kan-1':  '2025-08-04',  // Valls SA
+  'kan-5':  '2025-10-01',  // Vanfull
+  'kan-7':  '2025-12-04',  // Serviexpress
+  'kan-8':  '2025-12-26',  // Trucker (Tracker Group SRL)
+  'kan-9':  '2025-12-16',  // Northbus
+  'kan-10': '2026-01-13',  // La Canteria
+  'kan-2':  '2026-03-11',  // La Pesceria
+  'kan-4':  '2026-04-22',  // Strada
+  'kan-13': '2026-05-04',  // Deper
+}
+
 function migrateClient(c: Client): Client {
   // Split old user_admin step into user_admin_app + alta_portal
   const completedSteps = c.completedSteps.flatMap(id =>
     id === 'user_admin' ? ['user_admin_app', 'alta_portal'] : [id]
   )
   const currentStepId = c.currentStepId === 'user_admin' ? 'user_admin_app' : c.currentStepId
-  return { ...c, stepComments: c.stepComments ?? {}, completedSteps, currentStepId }
+  const startDate = START_DATE_PATCHES[c.id] ?? c.startDate
+  return { ...c, stepComments: c.stepComments ?? {}, completedSteps, currentStepId, startDate }
 }
 
 function loadClients(): Client[] {
