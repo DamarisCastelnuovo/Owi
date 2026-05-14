@@ -16,8 +16,8 @@ export function ClientCard({ client, onClick, onDelete }: Props) {
   const total = baseSteps.length
   const progress = Math.round((completed / total) * 100)
   const currentStep = ONBOARDING_STEPS.find(s => s.id === client.currentStepId)
-  const isOverdue = days > 30 && completed < total
   const isDone = completed === total
+  const isOverdue = !isDone && !!currentStep && !currentStep.optional && days > currentStep.day
 
   const statusColor = isDone
     ? 'bg-green-50 border-green-200'
@@ -44,6 +44,12 @@ export function ClientCard({ client, onClick, onDelete }: Props) {
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-semibold text-gray-800 truncate">{client.name}</h3>
+            {isOverdue && (
+              <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+              </span>
+            )}
             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badgeColor}`}>{badgeText}</span>
           </div>
           <p className="text-sm text-gray-500 truncate">{client.company}</p>

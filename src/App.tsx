@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, ChevronDown } from 'lucide-react'
 import { useClients } from './hooks/useClients'
 import { ClientCard } from './components/ClientCard'
 import { ClientDetail } from './components/ClientDetail'
@@ -11,11 +11,12 @@ import { daysSince } from './utils/dates'
 const BASE_STEPS = ONBOARDING_STEPS.filter(s => !s.optional)
 
 export default function App() {
-  const { clients, addClient, updateClientStep, setCurrentStep, deleteClient } = useClients()
+  const { clients, addClient, updateClientStep, setCurrentStep, updateStepComment, deleteClient } = useClients()
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'done' | 'overdue'>('all')
+  const [stepFilter, setStepFilter] = useState('')
 
   const selectedClient = clients.find(c => c.id === selectedClientId) ?? null
 
@@ -35,11 +36,14 @@ export default function App() {
     const days = daysSince(c.startDate)
     const completed = c.completedSteps.filter(id => BASE_STEPS.some(s => s.id === id)).length
     const isDone = completed === BASE_STEPS.length
-    const isOverdue = days > 30 && !isDone
+    const currentStepData = ONBOARDING_STEPS.find(s => s.id === c.currentStepId)
+    const isOverdue = !isDone && !!currentStepData && !currentStepData.optional && days > currentStepData.day
 
-    if (filter === 'done') return isDone
-    if (filter === 'overdue') return isOverdue
-    if (filter === 'active') return !isDone && !isOverdue
+    if (filter === 'done' && !isDone) return false
+    if (filter === 'overdue' && !isOverdue) return false
+    if (filter === 'active' && (isDone || isOverdue)) return false
+    if (stepFilter && c.currentStepId !== stepFilter) return false
+
     return true
   })
 
@@ -68,12 +72,13 @@ export default function App() {
             onBack={() => setSelectedClientId(null)}
             onToggleStep={(stepId, completed) => updateClientStep(selectedClient.id, stepId, completed)}
             onSetCurrent={(stepId) => setCurrentStep(selectedClient.id, stepId)}
+            onUpdateComment={(stepId, comment) => updateStepComment(selectedClient.id, stepId, comment)}
           />
         ) : (
           <>
             <GlobalStats clients={clients} />
 
-            <div className="flex flex-col sm:flex-row gap-3 mb-5">
+            <div className="flex flex-col sm:flex-row gap-3 mb-3">
               <div className="relative flex-1">
                 <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
@@ -99,6 +104,20 @@ export default function App() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="relative mb-5 w-full sm:w-72">
+              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <select
+                value={stepFilter}
+                onChange={e => setStepFilter(e.target.value)}
+                className="w-full appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Todas las etapas</option>
+                {BASE_STEPS.map(s => (
+                  <option key={s.id} value={s.id}>{s.label}</option>
+                ))}
+              </select>
             </div>
 
             {filtered.length === 0 ? (

@@ -5,6 +5,7 @@ export interface Client {
   startDate: string
   currentStepId: string
   completedSteps: string[]
+  stepComments: Record<string, string>
   notes?: string
   createdAt: string
 }

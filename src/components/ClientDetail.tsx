@@ -9,16 +9,18 @@ interface Props {
   onBack: () => void
   onToggleStep: (stepId: string, completed: boolean) => void
   onSetCurrent: (stepId: string) => void
+  onUpdateComment: (stepId: string, comment: string) => void
 }
 
-export function ClientDetail({ client, onBack, onToggleStep, onSetCurrent }: Props) {
+export function ClientDetail({ client, onBack, onToggleStep, onSetCurrent, onUpdateComment }: Props) {
   const days = daysSince(client.startDate)
   const baseSteps = ONBOARDING_STEPS.filter(s => !s.optional)
   const completed = client.completedSteps.filter(id => baseSteps.some(s => s.id === id)).length
   const total = baseSteps.length
   const progress = Math.round((completed / total) * 100)
   const isDone = completed === total
-  const isOverdue = days > 30 && !isDone
+  const currentStep = ONBOARDING_STEPS.find(s => s.id === client.currentStepId)
+  const isOverdue = !isDone && !!currentStep && !currentStep.optional && days > currentStep.day
   const daysLeft = Math.max(0, 30 - days)
 
   return (
@@ -40,14 +42,20 @@ export function ClientDetail({ client, onBack, onToggleStep, onSetCurrent }: Pro
               <span className="text-sm">{client.company}</span>
             </div>
           </div>
-          <div className="text-right">
+          <div className="text-right flex items-center gap-2">
+            {isOverdue && (
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+              </span>
+            )}
             {isDone ? (
               <span className="inline-block bg-green-100 text-green-700 text-sm font-semibold px-3 py-1 rounded-full">
                 Completado ✓
               </span>
             ) : isOverdue ? (
               <span className="inline-block bg-red-100 text-red-600 text-sm font-semibold px-3 py-1 rounded-full">
-                Atrasado {days - 30}d
+                Atrasado {days - (currentStep?.day ?? 30)}d
               </span>
             ) : (
               <span className="inline-block bg-blue-100 text-blue-700 text-sm font-semibold px-3 py-1 rounded-full">
@@ -98,12 +106,13 @@ export function ClientDetail({ client, onBack, onToggleStep, onSetCurrent }: Pro
           Proceso de Alta
         </h3>
         <p className="text-xs text-gray-400 mb-4">
-          Hacé clic en cada paso para marcarlo como completado
+          Hacé clic en cada paso para marcarlo como completado · Tocá la burbuja para agregar un comentario
         </p>
         <StepTimeline
           client={client}
           onToggleStep={onToggleStep}
           onSetCurrent={onSetCurrent}
+          onUpdateComment={onUpdateComment}
         />
       </div>
     </div>
