@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Plus, Search, ChevronDown } from 'lucide-react'
+import { Plus, Search, ChevronDown, BarChart2, LayoutGrid } from 'lucide-react'
 import { useClients } from './hooks/useClients'
 import { ClientCard } from './components/ClientCard'
 import { ClientDetail } from './components/ClientDetail'
 import { AddClientModal } from './components/AddClientModal'
 import { GlobalStats } from './components/GlobalStats'
+import { StatsPanel } from './components/StatsPanel'
 import { ONBOARDING_STEPS } from './data/steps'
 import { daysSince } from './utils/dates'
 
@@ -17,6 +18,7 @@ export default function App() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'done' | 'overdue'>('all')
   const [stepFilter, setStepFilter] = useState('')
+  const [view, setView] = useState<'clients' | 'stats'>('clients')
 
   const selectedClient = clients.find(c => c.id === selectedClientId) ?? null
 
@@ -50,10 +52,34 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-bold text-gray-900">Owi</h1>
-            <p className="text-xs text-gray-400">Dashboard de altas</p>
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <div>
+              <h1 className="text-lg font-bold text-gray-900">Owi</h1>
+              <p className="text-xs text-gray-400">Dashboard de altas</p>
+            </div>
+            {!selectedClient && (
+              <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setView('clients')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    view === 'clients' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <LayoutGrid size={14} />
+                  Clientes
+                </button>
+                <button
+                  onClick={() => setView('stats')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    view === 'stats' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <BarChart2 size={14} />
+                  Estadísticas
+                </button>
+              </div>
+            )}
           </div>
           <button
             onClick={() => setShowAddModal(true)}
@@ -65,7 +91,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-6">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-6">
         {selectedClient ? (
           <ClientDetail
             client={selectedClient}
@@ -74,6 +100,8 @@ export default function App() {
             onSetCurrent={(stepId) => setCurrentStep(selectedClient.id, stepId)}
             onUpdateComment={(stepId, comment) => updateStepComment(selectedClient.id, stepId, comment)}
           />
+        ) : view === 'stats' ? (
+          <StatsPanel clients={clients} />
         ) : (
           <>
             <GlobalStats clients={clients} />
@@ -137,7 +165,7 @@ export default function App() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filtered.map(client => (
                   <ClientCard
                     key={client.id}
