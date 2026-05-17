@@ -33,6 +33,19 @@ function migrateClient(c: Client): Client {
   }
 }
 
+const STORAGE_KEY = 'owi_clients'
+
+function readLocalStorage(): Client[] | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return null
+    const parsed: Client[] = JSON.parse(raw)
+    return parsed.length > 0 ? parsed.map(migrateClient) : null
+  } catch {
+    return null
+  }
+}
+
 async function dbUpsert(client: Client) {
   await supabase
     .from('clients')
@@ -51,13 +64,16 @@ export function useClients() {
     // Load initial data
     supabase.from('clients').select('data').then(async ({ data, error }) => {
       if (error || !data || data.length === 0) {
-        // Seed with initial clients
+        // Try to migrate from localStorage first, fall back to initial clients
+        const localData = readLocalStorage()
+        const toSeed = localData ?? INITIAL_CLIENTS
         await Promise.all(
-          INITIAL_CLIENTS.map(c =>
+          toSeed.map(c =>
             supabase.from('clients').upsert({ id: c.id, data: c, updated_at: new Date().toISOString() })
           )
         )
-        setClients(INITIAL_CLIENTS)
+        if (localData) localStorage.removeItem(STORAGE_KEY)
+        setClients(toSeed)
       } else {
         setClients(data.map(row => migrateClient(row.data as Client)))
       }
