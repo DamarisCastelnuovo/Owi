@@ -1,25 +1,22 @@
 import { useState, useEffect } from 'react'
 import type { Client } from '../types/client'
 import { INITIAL_CLIENTS } from '../data/initialClients'
+import { supabase } from '../lib/supabase'
 
-const STORAGE_KEY = 'owi_clients'
-
-// Corrected start dates for seeded clients
 const START_DATE_PATCHES: Record<string, string> = {
-  'kan-1':  '2025-08-04',  // Valls SA
-  'kan-5':  '2025-10-01',  // Vanfull
-  'kan-7':  '2025-12-04',  // Serviexpress
-  'kan-8':  '2025-12-26',  // Trucker (Tracker Group SRL)
-  'kan-9':  '2025-12-16',  // Northbus
-  'kan-10': '2026-01-13',  // La Canteria
-  'kan-2':  '2026-04-07',  // La Pesceria
-  'kan-12': '2026-03-11',  // FP Comunicaciones
-  'kan-4':  '2026-04-22',  // Strada
-  'kan-13': '2026-05-04',  // Deper
+  'kan-1':  '2025-08-04',
+  'kan-5':  '2025-10-01',
+  'kan-7':  '2025-12-04',
+  'kan-8':  '2025-12-26',
+  'kan-9':  '2025-12-16',
+  'kan-10': '2026-01-13',
+  'kan-2':  '2026-04-07',
+  'kan-12': '2026-03-11',
+  'kan-4':  '2026-04-22',
+  'kan-13': '2026-05-04',
 }
 
 function migrateClient(c: Client): Client {
-  // Split old user_admin step into user_admin_app + alta_portal
   const completedSteps = c.completedSteps.flatMap(id =>
     id === 'user_admin' ? ['user_admin_app', 'alta_portal'] : [id]
   )
@@ -36,29 +33,62 @@ function migrateClient(c: Client): Client {
   }
 }
 
-function loadClients(): Client[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed: Client[] = JSON.parse(raw)
-      if (parsed.length > 0) return parsed.map(migrateClient)
-    }
-    return INITIAL_CLIENTS
-  } catch {
-    return INITIAL_CLIENTS
-  }
+async function dbUpsert(client: Client) {
+  await supabase
+    .from('clients')
+    .upsert({ id: client.id, data: client, updated_at: new Date().toISOString() })
 }
 
-function saveClients(clients: Client[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(clients))
+async function dbDelete(clientId: string) {
+  await supabase.from('clients').delete().eq('id', clientId)
 }
 
 export function useClients() {
-  const [clients, setClients] = useState<Client[]>(loadClients)
+  const [clients, setClients] = useState<Client[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    saveClients(clients)
-  }, [clients])
+    // Load initial data
+    supabase.from('clients').select('data').then(async ({ data, error }) => {
+      if (error || !data || data.length === 0) {
+        // Seed with initial clients
+        await Promise.all(
+          INITIAL_CLIENTS.map(c =>
+            supabase.from('clients').upsert({ id: c.id, data: c, updated_at: new Date().toISOString() })
+          )
+        )
+        setClients(INITIAL_CLIENTS)
+      } else {
+        setClients(data.map(row => migrateClient(row.data as Client)))
+      }
+      setLoading(false)
+    })
+
+    // Real-time subscription
+    const channel = supabase
+      .channel('clients-sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'clients' },
+        payload => {
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            const updated = migrateClient((payload.new as { data: Client }).data)
+            setClients(prev => {
+              const exists = prev.some(c => c.id === updated.id)
+              return exists
+                ? prev.map(c => c.id === updated.id ? updated : c)
+                : [...prev, updated]
+            })
+          } else if (payload.eventType === 'DELETE') {
+            const deletedId = (payload.old as { id: string }).id
+            setClients(prev => prev.filter(c => c.id !== deletedId))
+          }
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [])
 
   function addClient(data: Omit<Client, 'id' | 'createdAt' | 'completedSteps' | 'currentStepId' | 'stepComments' | 'stepStartDates' | 'stepCompletedDates'>) {
     const client: Client = {
@@ -72,47 +102,69 @@ export function useClients() {
       currentStepId: 'firma_contrato',
     }
     setClients(prev => [...prev, client])
+    dbUpsert(client)
     return client
   }
 
   function updateClientStep(clientId: string, stepId: string, completed: boolean) {
     const now = new Date().toISOString()
-    setClients(prev => prev.map(c => {
-      if (c.id !== clientId) return c
-      const completedSteps = completed
-        ? Array.from(new Set([...c.completedSteps, stepId]))
-        : c.completedSteps.filter(s => s !== stepId)
-      const stepCompletedDates = completed
-        ? { ...c.stepCompletedDates, [stepId]: now }
-        : Object.fromEntries(Object.entries(c.stepCompletedDates).filter(([k]) => k !== stepId))
-      return { ...c, completedSteps, stepCompletedDates, currentStepId: stepId }
-    }))
+    setClients(prev => {
+      const next = prev.map(c => {
+        if (c.id !== clientId) return c
+        const completedSteps = completed
+          ? Array.from(new Set([...c.completedSteps, stepId]))
+          : c.completedSteps.filter(s => s !== stepId)
+        const stepCompletedDates = completed
+          ? { ...c.stepCompletedDates, [stepId]: now }
+          : Object.fromEntries(Object.entries(c.stepCompletedDates).filter(([k]) => k !== stepId))
+        return { ...c, completedSteps, stepCompletedDates, currentStepId: stepId }
+      })
+      const changed = next.find(c => c.id === clientId)
+      if (changed) dbUpsert(changed)
+      return next
+    })
   }
 
   function setCurrentStep(clientId: string, stepId: string) {
     const now = new Date().toISOString()
-    setClients(prev => prev.map(c =>
-      c.id === clientId
-        ? { ...c, currentStepId: stepId, stepStartDates: { ...c.stepStartDates, [stepId]: now } }
-        : c
-    ))
+    setClients(prev => {
+      const next = prev.map(c =>
+        c.id === clientId
+          ? { ...c, currentStepId: stepId, stepStartDates: { ...c.stepStartDates, [stepId]: now } }
+          : c
+      )
+      const changed = next.find(c => c.id === clientId)
+      if (changed) dbUpsert(changed)
+      return next
+    })
   }
 
   function updateStepComment(clientId: string, stepId: string, comment: string) {
-    setClients(prev => prev.map(c =>
-      c.id === clientId
-        ? { ...c, stepComments: { ...c.stepComments, [stepId]: comment } }
-        : c
-    ))
+    setClients(prev => {
+      const next = prev.map(c =>
+        c.id === clientId
+          ? { ...c, stepComments: { ...c.stepComments, [stepId]: comment } }
+          : c
+      )
+      const changed = next.find(c => c.id === clientId)
+      if (changed) dbUpsert(changed)
+      return next
+    })
   }
 
   function deleteClient(clientId: string) {
     setClients(prev => prev.filter(c => c.id !== clientId))
+    dbDelete(clientId)
   }
 
   function updateClient(clientId: string, data: Partial<Client>) {
-    setClients(prev => prev.map(c => c.id === clientId ? { ...c, ...data } : c))
+    setClients(prev => {
+      const next = prev.map(c => c.id === clientId ? { ...c, ...data } : c)
+      const changed = next.find(c => c.id === clientId)
+      if (changed) dbUpsert(changed)
+      return next
+    })
   }
 
-  return { clients, addClient, updateClientStep, setCurrentStep, updateStepComment, deleteClient, updateClient }
+  return { clients, loading, addClient, updateClientStep, setCurrentStep, updateStepComment, deleteClient, updateClient }
 }
