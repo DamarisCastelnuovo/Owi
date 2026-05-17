@@ -12,7 +12,7 @@ import { daysSince } from './utils/dates'
 const BASE_STEPS = ONBOARDING_STEPS.filter(s => !s.optional)
 
 export default function App() {
-  const { clients, addClient, updateClientStep, setCurrentStep, updateStepComment, deleteClient } = useClients()
+  const { clients, loading, addClient, updateClientStep, setCurrentStep, updateStepComment, deleteClient } = useClients()
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [search, setSearch] = useState('')
@@ -93,6 +93,12 @@ export default function App() {
       </header>
 
       <main className="w-full px-6 sm:px-10 lg:px-16 py-6">
+        {loading && (
+          <div className="flex items-center justify-center py-24">
+            <div className="w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin" />
+          </div>
+        )}
+        {!loading && <>
         {selectedClient ? (
           <ClientDetail
             client={selectedClient}
@@ -179,6 +185,7 @@ export default function App() {
             )}
           </>
         )}
+        </>}
       </main>
 
       {showAddModal && (
