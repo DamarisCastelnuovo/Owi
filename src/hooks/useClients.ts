@@ -63,17 +63,24 @@ export function useClients() {
   useEffect(() => {
     // Load initial data
     supabase.from('clients').select('data').then(async ({ data, error }) => {
-      if (error || !data || data.length === 0) {
-        // Try to migrate from localStorage first, fall back to initial clients
-        const localData = readLocalStorage()
-        const toSeed = localData ?? INITIAL_CLIENTS
+      // If localStorage has data, it takes priority — migrate it to Supabase
+      const localData = readLocalStorage()
+      if (localData) {
         await Promise.all(
-          toSeed.map(c =>
+          localData.map(c =>
             supabase.from('clients').upsert({ id: c.id, data: c, updated_at: new Date().toISOString() })
           )
         )
-        if (localData) localStorage.removeItem(STORAGE_KEY)
-        setClients(toSeed)
+        localStorage.removeItem(STORAGE_KEY)
+        setClients(localData)
+      } else if (error || !data || data.length === 0) {
+        // Supabase empty and no localStorage → seed from initial clients
+        await Promise.all(
+          INITIAL_CLIENTS.map(c =>
+            supabase.from('clients').upsert({ id: c.id, data: c, updated_at: new Date().toISOString() })
+          )
+        )
+        setClients(INITIAL_CLIENTS)
       } else {
         setClients(data.map(row => migrateClient(row.data as Client)))
       }
